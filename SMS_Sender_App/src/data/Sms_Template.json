@@ -1,0 +1,186 @@
+{
+  "templates": [
+    {
+      "id": 1,
+      "category": "Fees",
+      "title": "Monthly Fee Reminder",
+      "variables": ["month", "schoolName"],
+      "message": "Dear Parents, kindly deposit the tuition fees for the month of {month}. Please ignore if already paid. - {schoolName}"
+    },
+
+    {
+      "id": 2,
+      "category": "Uniform",
+      "title": "Improper Uniform Notice",
+      "variables": ["date", "schoolName"],
+      "message": "Dear Parents, your ward is not coming to school in proper uniform on {date}. Kindly pay attention. - {schoolName}"
+    },
+
+    {
+      "id": 3,
+      "category": "Homework",
+      "title": "Homework Incomplete",
+      "variables": ["schoolName"],
+      "message": "Dear Parents, your ward is not doing homework regularly. Kindly ensure proper completion. - {schoolName}"
+    },
+
+    {
+      "id": 4,
+      "category": "Academic",
+      "title": "Lack of Concentration",
+      "variables": ["subject", "schoolName"],
+      "message": "Dear Parents, your ward is not concentrating on {subject}. Kindly pay attention. - {schoolName}"
+    },
+
+    {
+      "id": 5,
+      "category": "Assignment",
+      "title": "Assignment Not Submitted",
+      "variables": ["assignmentName", "schoolName"],
+      "message": "Dear Parents, your ward is not submitting the {assignmentName} assignment. Kindly ensure submission. - {schoolName}"
+    },
+
+    {
+      "id": 6,
+      "category": "Attendance",
+      "title": "Class Absence Notice",
+      "variables": ["days", "schoolName"],
+      "message": "Dear Parents, your ward is not attending classes for the last {days} days. Kindly contact the school. - {schoolName}"
+    },
+
+    {
+      "id": 7,
+      "category": "Attendance",
+      "title": "School Absence",
+      "variables": ["date", "schoolName"],
+      "message": "Dear Parents, your ward is not attending school since {date}. Kindly inform the reason. - {schoolName}"
+    },
+
+    {
+      "id": 8,
+      "category": "Performance",
+      "title": "Unsatisfactory Performance",
+      "variables": ["subject", "schoolName"],
+      "message": "Dear Parents, your ward's performance is not satisfactory in {subject}. Kindly pay attention. - {schoolName}"
+    },
+
+    {
+      "id": 9,
+      "category": "General",
+      "title": "School Timing Change",
+      "variables": ["oldTime", "newTime", "schoolName"],
+      "message": "Dear Parents, school timing is being changed from {oldTime} to {newTime}. - {schoolName}"
+    },
+
+    {
+      "id": 10,
+      "category": "Holiday",
+      "title": "School Holiday",
+      "variables": ["date", "reason", "schoolName"],
+      "message": "Dear Parents, school will remain closed on {date} on account of {reason}. - {schoolName}"
+    },
+
+    {
+      "id": 11,
+      "category": "Exam",
+      "title": "Exam Performance Report",
+      "variables": ["examName", "schoolName"],
+      "message": "Dear Parents, performance data of the {examName} exam has been provided to your ward. Kindly inquire. - {schoolName}"
+    },
+
+    {
+      "id": 12,
+      "category": "Event",
+      "title": "School Celebration",
+      "variables": ["eventName", "date", "schoolName"],
+      "message": "Dear Parents, there is a celebration of {eventName} on {date}. Kindly motivate your ward to participate. - {schoolName}"
+    },
+
+    {
+      "id": 13,
+      "category": "PTM",
+      "title": "Parent Teacher Meeting",
+      "variables": ["date", "time", "schoolName"],
+      "message": "Dear Parents, Parent-Teacher Meeting is being organised on {date} at {time}. Please join the school for your concern. - {schoolName}"
+    },
+
+    {
+      "id": 14,
+      "category": "General",
+      "title": "Contact School",
+      "variables": ["schoolName"],
+      "message": "Dear Parents, if you have any problem or suggestion regarding your ward, please contact the school office. - {schoolName}"
+    },
+
+    {
+      "id": 15,
+      "category": "Exam",
+      "title": "Admit Card Reminder",
+      "variables": ["examName", "schoolName"],
+      "message": "Dear Parents, inform your ward to collect the admit card before the starting of {examName} examinations. - {schoolName}"
+    },
+
+    {
+      "id": 16,
+      "category": "Discipline",
+      "title": "Late Arrival Notice",
+      "variables": ["schoolName"],
+      "message": "Dear Parents, your ward is coming to school late daily. Kindly pay attention. - {schoolName}"
+    },
+
+    {
+      "id": 17,
+      "category": "Discipline",
+      "title": "Mobile Phone Warning",
+      "variables": ["schoolName"],
+      "message": "Dear Parents, your ward has been found using a mobile phone during school hours. Kindly cooperate with school discipline rules. - {schoolName}"
+    },
+
+    {
+      "id": 18,
+      "category": "Transport",
+      "title": "Bus Delay Notice",
+      "variables": ["delayTime", "schoolName"],
+      "message": "Dear Parents, the school bus will be delayed today by approximately {delayTime}. Kindly cooperate. - {schoolName}"
+    },
+
+    {
+      "id": 19,
+      "category": "Emergency",
+      "title": "Urgent School Closure",
+      "variables": ["reason", "schoolName"],
+      "message": "Dear Parents, school is closed today due to {reason}. Further updates will follow. - {schoolName}"
+    },
+
+    {
+      "id": 20,
+      "category": "Health",
+      "title": "Health Advisory",
+      "variables": ["issue", "schoolName"],
+      "message": "Dear Parents, due to {issue}, kindly ensure your ward follows necessary precautions. - {schoolName}"
+    },
+
+    {
+      "id": 21,
+      "category": "Exam",
+      "title": "Exam Schedule Notice",
+      "variables": ["startDate", "schoolName"],
+      "message": "Dear Parents, examinations will commence from {startDate}. Kindly ensure your ward is prepared. - {schoolName}"
+    },
+
+    {
+      "id": 22,
+      "category": "General",
+      "title": "Important Circular",
+      "variables": ["messageContent", "schoolName"],
+      "message": "Dear Parents, {messageContent}. - {schoolName}"
+    },
+    {
+      "id": 23,
+      "category": "Test",
+      "title": "Spring Edge Demo Test",
+      "variables": [],
+      "message": "Hello $var, This is a test message from spring edge"
+    }
+  ]
+}

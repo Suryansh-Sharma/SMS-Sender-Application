@@ -1,0 +1,204 @@
+import {
+  Table,
+  Tag,
+  Input,
+  Button,
+  Card,
+  Select,
+  Modal,
+  Upload,
+  message,
+} from "antd";
+import { useState } from "react";
+import { UploadOutlined } from "@ant-design/icons";
+import * as XLSX from "xlsx";
+
+const { TextArea } = Input;
+
+type Recipient = {
+  id?: number;
+  name?: string;
+  contact: string;
+  class?: string;
+};
+
+function SendMessage() {
+  // Dummy Data
+  const [dataSource] = useState<Recipient[]>(
+    Array.from({ length: 20 }, (_, i) => ({
+      id: i + 1,
+      name: `User ${i + 1}`,
+      contact: `90000000${(i + 1).toString().padStart(2, "0")}`,
+      class: `Class ${(i % 3) + 1}`,
+    })),
+  );
+
+  const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const [messageText, setMessageText] = useState("");
+  const [manualNumbers, setManualNumbers] = useState<string[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Deduplication
+  const addRecipients = (newList: Recipient[]) => {
+    setRecipients((prev) => {
+      const map = new Map(prev.map((r) => [r.contact, r]));
+      newList.forEach((r) => map.set(r.contact, r));
+      return Array.from(map.values());
+    });
+  };
+
+  // Table selection
+  const rowSelection = {
+    onChange: (_: any, selectedRows: Recipient[]) => {
+      addRecipients(selectedRows);
+    },
+  };
+
+  // Excel Upload Handler
+  const handleFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target?.result as ArrayBuffer);
+      const workbook = XLSX.read(data, { type: "array" });
+
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json: any[] = XLSX.utils.sheet_to_json(sheet);
+
+      const contacts = json.map((row) => ({
+        name: row.name,
+        contact: String(row.phone),
+      }));
+
+      addRecipients(contacts);
+      message.success("Contacts imported successfully");
+    };
+    reader.readAsArrayBuffer(file);
+    return false;
+  };
+
+  const columns = [
+    { title: "Name", dataIndex: "name" },
+    { title: "Class", dataIndex: "class" },
+    { title: "Contact", dataIndex: "contact" },
+  ];
+
+  const charCount = messageText.length;
+  const smsCount = Math.ceil(charCount / 160) || 1;
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-10 space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold">Send Message</h1>
+        <p className="text-gray-500">Smart recipient builder</p>
+      </div>
+
+      {/* Recipient Builder */}
+      <Card title="Select Recipients">
+        {/* Filters */}
+        <div className="flex gap-4 mb-4">
+          <Select
+            placeholder="Filter by Class"
+            style={{ width: 200 }}
+            options={[
+              { label: "Class 1", value: "Class 1" },
+              { label: "Class 2", value: "Class 2" },
+              { label: "Class 3", value: "Class 3" },
+            ]}
+          />
+
+          <Input placeholder="Search by name or phone" />
+        </div>
+
+        {/* Table */}
+        <Table
+          rowKey="contact"
+          rowSelection={rowSelection}
+          columns={columns}
+          dataSource={dataSource}
+          pagination={{ pageSize: 5 }}
+        />
+
+        {/* Secondary Actions */}
+        <div className="flex gap-4 mt-4">
+          <Select
+            mode="tags"
+            style={{ width: "100%" }}
+            placeholder="Add manual numbers"
+            value={manualNumbers}
+            onChange={(values) => {
+              setManualNumbers(values);
+              addRecipients(values.map((v) => ({ contact: v })));
+            }}
+          />
+
+          <Button onClick={() => setIsModalOpen(true)}>Import Excel</Button>
+        </div>
+      </Card>
+
+      {/* Selected Recipients */}
+      <Card title={`Selected (${recipients.length})`}>
+        <div className="flex flex-wrap gap-2">
+          {recipients.map((r) => (
+            <Tag
+              key={r.contact}
+              closable
+              onClose={() =>
+                setRecipients((prev) =>
+                  prev.filter((x) => x.contact !== r.contact),
+                )
+              }
+            >
+              {r.name || r.contact}
+            </Tag>
+          ))}
+        </div>
+      </Card>
+
+      {/* Message Composer */}
+      <Card title="Compose Message">
+        <TextArea
+          rows={4}
+          value={messageText}
+          onChange={(e) => setMessageText(e.target.value)}
+        />
+        <div className="flex justify-between text-sm mt-2">
+          <span>{charCount} characters</span>
+          <span>{smsCount} SMS</span>
+        </div>
+      </Card>
+
+      {/* Summary */}
+      <Card>
+        <div className="flex justify-between items-center">
+          <div>
+            <p>Recipients: {recipients.length}</p>
+            <p>Total SMS: {recipients.length * smsCount}</p>
+          </div>
+
+          <Button
+            type="primary"
+            size="large"
+            disabled={!recipients.length || !messageText}
+          >
+            Send SMS
+          </Button>
+        </div>
+      </Card>
+
+      {/* Excel Modal */}
+      <Modal
+        title="Upload Excel"
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+      >
+        <Upload beforeUpload={handleFile} showUploadList={false}>
+          <Button icon={<UploadOutlined />}>Upload File</Button>
+        </Upload>
+      </Modal>
+    </div>
+  );
+}
+
+export default SendMessage;
