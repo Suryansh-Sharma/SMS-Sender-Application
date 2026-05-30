@@ -104,6 +104,7 @@ const HOW_TO_USE = [
             background: "#f1f5f9",
             padding: "2px 6px",
             borderRadius: 4,
+            color: "black",
           }}
         >
           mobile
