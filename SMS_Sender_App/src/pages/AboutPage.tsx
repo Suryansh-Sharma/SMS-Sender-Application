@@ -393,7 +393,7 @@ export default function AboutPage() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <a
-                  href="mailto:suryansh@chirokhealth.com"
+                  href="mailto:suryanshsharma1942@gmail.com"
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -404,7 +404,7 @@ export default function AboutPage() {
                   }}
                 >
                   <MailOutlined />
-                  suryansh1942gmail@.com
+                  suryanshsharma1942gmail@.com
                 </a>
                 <span
                   style={{
