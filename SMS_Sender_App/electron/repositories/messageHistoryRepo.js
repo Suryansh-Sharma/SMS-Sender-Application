@@ -14,6 +14,20 @@ export const messageHistoryRepo = {
     `).run(campaign_id, category, message, total_recipients, total_token_used, failed_count, status, springedge_group_id ?? null, sent_by ?? null);
   },
 
+  getTodaySentCount: () => {
+    return db.prepare(
+      `SELECT COALESCE(SUM(total_recipients), 0) as total
+       FROM message_history
+       WHERE date(sent_on, 'localtime') = date('now', 'localtime')`
+    ).get().total;
+  },
+
+  updateDelivery: ({ campaign_id, delivered_count }) => {
+    return db.prepare(
+      `UPDATE message_history SET delivered_count = ? WHERE campaign_id = ?`
+    ).run(delivered_count, campaign_id);
+  },
+
   getPaginated: ({
     page = 1,
     limit = 10,

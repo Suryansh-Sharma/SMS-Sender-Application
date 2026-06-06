@@ -79,7 +79,7 @@ function SendMessage() {
       const json: any[] = XLSX.utils.sheet_to_json(sheet);
       const contacts = json.map((row) => ({
         name: row.Name,
-        contact: String(row.Phone || row.Contact),
+        contact: String(row.mobile ?? row.Mobile ?? row.Phone ?? row.Contact),
       }));
       setRecipients([]);
       addRecipients(contacts);
@@ -151,21 +151,23 @@ function SendMessage() {
           });
           setProgress(null);
           sendingRef.current = false;
-          Modal.success({
-            title: "Campaign Sent",
-            content: (
-              <div className="space-y-1 mt-2">
-                <p>Total recipients: <b>{result.totalRecipients}</b></p>
-                <p>Successfully sent: <b className="text-green-600">{result.successCount}</b></p>
-                {result.failedCount > 0 && (
-                  <p>Failed: <b className="text-red-500">{result.failedCount}</b></p>
-                )}
-                {result.groupId && (
-                  <p className="text-xs text-slate-400 mt-2">Group ID: {result.groupId}</p>
-                )}
-              </div>
-            ),
-          });
+          const resultContent = (
+            <div className="space-y-1 mt-2">
+              <p>Total recipients: <b>{result.totalRecipients}</b></p>
+              <p>Submitted to network: <b className="text-green-600">{result.successCount}</b></p>
+              {result.failedCount > 0 && (
+                <p>Failed: <b className="text-red-500">{result.failedCount}</b></p>
+              )}
+              {result.groupId && (
+                <p className="text-xs text-slate-400 mt-2">Group ID: {result.groupId}</p>
+              )}
+            </div>
+          );
+          if (result.campaignStatus === "PARTIAL") {
+            Modal.warning({ title: "Campaign Partially Sent", content: resultContent });
+          } else {
+            Modal.success({ title: "Campaign Submitted", content: resultContent });
+          }
           setRecipients([]);
           setMessageText("");
           setCategory("");
@@ -179,7 +181,11 @@ function SendMessage() {
   };
 
   const charCount = messageText.length;
-  const smsCount = Math.ceil(charCount / 160) || 1;
+  // GSM-7 basic charset: 160 chars/segment (153 multipart). Unicode: 70 chars/segment (67 multipart).
+  const isGsm7 = /^[\x20-\x7E\n\r£¥àèéùìòÇØøÅåΔΦΓΛΩΠΨΣΘΞÆæßÉ¤¡ÄÖÑÜ§¿äöñüà]*$/.test(messageText);
+  const singleLimit = isGsm7 ? 160 : 70;
+  const multiLimit = isGsm7 ? 153 : 67;
+  const smsCount = charCount === 0 ? 1 : charCount <= singleLimit ? 1 : Math.ceil(charCount / multiLimit);
   const totalSms = recipients.length * smsCount;
 
   if (isLoading) return <LoadingComponent />;
@@ -437,8 +443,8 @@ function SendMessage() {
 
             <p className="mt-2 text-slate-400">Example:</p>
             <p className="font-mono text-[11px]">
-              Name | Contact <br />
-              John | 9876543210
+              Mobile (or Phone / Contact) | Name <br />
+              9876543210 | John
             </p>
           </div>
 

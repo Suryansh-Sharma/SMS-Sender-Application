@@ -47,4 +47,5 @@ contextBridge.exposeInMainWorld("api", {
   sendSms: (payload) => ipcRenderer.invoke("sms:sendMessage", payload),
   onSmsProgress: (callback) => ipcRenderer.on("sms:progress", (_, data) => callback(data)),
   offSmsProgress: () => ipcRenderer.removeAllListeners("sms:progress"),
+  getDeliveryReport: (payload) => ipcRenderer.invoke("sms:getDeliveryReport", payload),
 });

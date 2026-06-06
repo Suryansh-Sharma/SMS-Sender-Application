@@ -106,10 +106,21 @@ declare global {
       }) => Promise<{
         success: boolean;
         message?: string;
-        data?: { totalRecipients: number; successCount: number; failedCount: number; groupId: string | null };
+        data?: {
+          totalRecipients: number;
+          successCount: number;
+          failedCount: number;
+          groupId: string | null;
+          campaignStatus: "SENT" | "PARTIAL" | "FAILED";
+        };
       }>;
       onSmsProgress: (callback: (data: { sent: number; total: number; successCount: number; failedCount: number }) => void) => void;
       offSmsProgress: () => void;
+      getDeliveryReport: (payload: { groupId: string; campaignId: string }) => Promise<{
+        success: boolean;
+        data?: { deliveredCount: number };
+        message?: string;
+      }>;
     };
   }
 }

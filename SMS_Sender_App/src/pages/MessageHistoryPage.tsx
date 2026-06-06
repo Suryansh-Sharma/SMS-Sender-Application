@@ -1,5 +1,6 @@
-import { MessageOutlined } from "@ant-design/icons";
+import { MessageOutlined, SyncOutlined } from "@ant-design/icons";
 import {
+  Button,
   Card,
   Col,
   Row,
@@ -8,7 +9,9 @@ import {
   Statistic,
   Table,
   Tag,
+  Tooltip,
   Typography,
+  message,
 } from "antd";
 import { useEffect, useState } from "react";
 import { LoadingComponent } from "../component/LoadingComponent";
@@ -27,6 +30,7 @@ const MessageHistoryPage = () => {
   const [page, setPage] = useState<number>(1);
 
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -47,6 +51,31 @@ const MessageHistoryPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefreshDelivery = async (record: MessageHistory) => {
+    if (!record.springedge_group_id) return;
+    setRefreshingId(record.campaign_id);
+    try {
+      const res = await window.api.getDeliveryReport({
+        groupId: record.springedge_group_id,
+        campaignId: record.campaign_id,
+      });
+      if (res.success) {
+        message.success(`Delivered: ${res.data?.deliveredCount ?? 0}`);
+        fetchData();
+      } else {
+        message.error(res.message ?? "Failed to fetch delivery report.");
+      }
+    } finally {
+      setRefreshingId(null);
+    }
+  };
+
+  const statusColor: Record<string, string> = {
+    SENT: "green",
+    PARTIAL: "orange",
+    FAILED: "red",
   };
 
   const columns = [
@@ -113,6 +142,42 @@ const MessageHistoryPage = () => {
       dataIndex: "sent_on",
       key: "sentOn",
       render: (value: string) => new Date(value.replace(" ", "T") + "Z").toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+    },
+
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (value: string) => (
+        <Tag color={statusColor[value] ?? "default"} style={{ borderRadius: 999 }}>
+          {value}
+        </Tag>
+      ),
+    },
+
+    {
+      title: "Delivered",
+      dataIndex: "delivered_count",
+      key: "deliveredCount",
+      render: (value: number) => (
+        <Text>{value > 0 ? value : "—"}</Text>
+      ),
+    },
+
+    {
+      title: "",
+      key: "actions",
+      render: (_: unknown, record: MessageHistory) =>
+        record.springedge_group_id ? (
+          <Tooltip title="Refresh delivery status from SpringEdge">
+            <Button
+              size="small"
+              icon={<SyncOutlined spin={refreshingId === record.campaign_id} />}
+              loading={refreshingId === record.campaign_id}
+              onClick={() => handleRefreshDelivery(record)}
+            />
+          </Tooltip>
+        ) : null,
     },
   ];
 

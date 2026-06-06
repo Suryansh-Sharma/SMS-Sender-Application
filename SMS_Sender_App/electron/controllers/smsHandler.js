@@ -4,18 +4,22 @@ import { messageHistoryRepo } from "../repositories/messageHistoryRepo.js";
 import https from "https";
 import http from "http";
 
+const REQUEST_TIMEOUT_MS = 30_000;
+const MAX_RETRIES = 3;
+
 function httpGet(urlString) {
   return new Promise((resolve, reject) => {
     const lib = urlString.startsWith("https") ? https : http;
-    lib.get(urlString, (res) => {
+    const req = lib.get(urlString, (res) => {
       let body = "";
       res.on("data", (chunk) => (body += chunk));
       res.on("end", () => resolve(body));
-    }).on("error", reject);
+    });
+    req.setTimeout(REQUEST_TIMEOUT_MS, () => req.destroy(new Error("Request timed out")));
+    req.on("error", reject);
   });
 }
 
-// POST with application/x-www-form-urlencoded body — used for bulk sends
 function httpPost(urlString, params) {
   return new Promise((resolve, reject) => {
     const lib = urlString.startsWith("https") ? https : http;
@@ -36,10 +40,24 @@ function httpPost(urlString, params) {
       res.on("data", (chunk) => (data += chunk));
       res.on("end", () => resolve(data));
     });
+    req.setTimeout(REQUEST_TIMEOUT_MS, () => req.destroy(new Error("Request timed out")));
     req.on("error", reject);
     req.write(body);
     req.end();
   });
+}
+
+async function withRetry(fn) {
+  let lastErr;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      await new Promise((res) => setTimeout(res, (attempt + 1) * 2000));
+    }
+  }
+  throw lastErr;
 }
 
 export const smsHandler = () => {
@@ -53,14 +71,7 @@ export const smsHandler = () => {
       const url = new URL(`${setting.smsUrl}/api/status/credit`);
       url.searchParams.set("apikey", setting.smsApiKey);
 
-      const body = await new Promise((resolve, reject) => {
-        https.get(url.toString(), (res) => {
-          let raw = "";
-          res.on("data", (chunk) => (raw += chunk));
-          res.on("end", () => resolve(raw));
-        }).on("error", reject);
-      });
-
+      const body = await withRetry(() => httpGet(url.toString()));
       const match = body.match(/<credits>([\d.]+)<\/credits>/);
       if (!match) {
         return { success: false, message: "Unexpected response from SMS provider." };
@@ -82,10 +93,21 @@ export const smsHandler = () => {
         return { success: false, message: "SMS settings not fully configured." };
       }
 
+      const total = recipients.length;
+
+      // Enforce daily SMS limit before sending anything.
+      const todaySent = messageHistoryRepo.getTodaySentCount();
+      const dailyLimit = setting.dailySmsLimit ?? 5000;
+      if (todaySent + total > dailyLimit) {
+        return {
+          success: false,
+          message: `Daily limit of ${dailyLimit} would be exceeded. Already sent ${todaySent} SMS today (${dailyLimit - todaySent} remaining).`,
+        };
+      }
+
       let successCount = 0;
       let failedCount = 0;
       let groupId = null;
-      const total = recipients.length;
 
       // Spring Edge accepts comma-separated numbers in a single POST.
       // Chunk at 300 to stay within safe POST body limits.
@@ -95,19 +117,21 @@ export const smsHandler = () => {
         const chunk = recipients.slice(i, i + CHUNK_SIZE);
 
         try {
-          const body = await httpPost(`${setting.smsUrl}/api/web/send/`, {
-            apikey: setting.smsApiKey,
-            sender: setting.senderId,
-            to: chunk.join(","),
-            message,
-            format: "json",
-          });
+          const body = await withRetry(() =>
+            httpPost(`${setting.smsUrl}/api/web/send/`, {
+              apikey: setting.smsApiKey,
+              sender: setting.senderId,
+              to: chunk.join(","),
+              message,
+              format: "json",
+            })
+          );
 
           console.log("[SMS] API raw response:", body);
 
           let parsed;
           try { parsed = JSON.parse(body); } catch {
-            console.error("[SMS] Non-JSON response (plain-text error):", body);
+            console.error("[SMS] Non-JSON response:", body);
             failedCount += chunk.length;
             event.sender.send("sms:progress", {
               sent: Math.min(i + CHUNK_SIZE, total),
@@ -123,11 +147,11 @@ export const smsHandler = () => {
             successCount += chunk.length;
             if (!groupId && parsed.groupID) groupId = String(parsed.groupID);
           } else {
-            console.error("[SMS] Unexpected status:", status, "Full response:", parsed);
+            console.error("[SMS] Unexpected status:", status, parsed);
             failedCount += chunk.length;
           }
         } catch (err) {
-          console.error("[SMS] Request error:", err);
+          console.error("[SMS] Request error after retries:", err);
           failedCount += chunk.length;
         }
 
@@ -152,14 +176,62 @@ export const smsHandler = () => {
         sent_by: sentBy,
       });
 
+      // A campaign where every chunk failed is a failure, not a success.
+      if (campaignStatus === "FAILED") {
+        return {
+          success: false,
+          message: "All messages failed to send. Check your API key and provider status.",
+        };
+      }
+
       return {
         success: true,
-        data: { totalRecipients: total, successCount, failedCount, groupId },
+        data: { totalRecipients: total, successCount, failedCount, groupId, campaignStatus },
       };
     } catch (error) {
       return {
         success: false,
         message: error instanceof Error ? error.message : "Failed to send SMS.",
+      };
+    }
+  });
+
+  ipcMain.handle("sms:getDeliveryReport", async (_, { groupId, campaignId }) => {
+    try {
+      const setting = settingService.getSetting();
+      if (!setting.smsApiKey || !setting.smsUrl) {
+        return { success: false, message: "SMS settings not configured." };
+      }
+
+      const url = new URL(`${setting.smsUrl}/api/report/delivery/`);
+      url.searchParams.set("apikey", setting.smsApiKey);
+      url.searchParams.set("groupid", groupId);
+      url.searchParams.set("format", "json");
+
+      const body = await withRetry(() => httpGet(url.toString()));
+      console.log("[DLR] Raw response:", body);
+
+      let records;
+      try {
+        const parsed = JSON.parse(body);
+        records = Array.isArray(parsed) ? parsed : parsed.report ?? [];
+      } catch {
+        return { success: false, message: "Unexpected delivery report response." };
+      }
+
+      const deliveredCount = records.filter(
+        (r) => String(r.status ?? "").toUpperCase() === "DELIVERED"
+      ).length;
+
+      if (campaignId) {
+        messageHistoryRepo.updateDelivery({ campaign_id: campaignId, delivered_count: deliveredCount });
+      }
+
+      return { success: true, data: { deliveredCount } };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to fetch delivery report.",
       };
     }
   });
