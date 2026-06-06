@@ -7,12 +7,39 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build Outputs
 dist
 dist-ssr
+dist-installer
+release
+out
+
+# Electron Builder
+*.blockmap
+latest.yml
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Application Runtime Data
+data/
+uploads/
+temp/
+
+# Environment Files
+.env
+.env.*
+!.env.example
+
+# Local Config
 *.local
 
-# Editor directories and files
+# Editor Directories and Files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -22,3 +49,24 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# OS Files
+Thumbs.db
+
+# Coverage
+coverage
+
+# Cache
+.cache
+.eslintcache
+
+# TypeScript
+*.tsbuildinfo
+
+# Electron Logs
+electron-debug.log
+
+# Package Manager
+.pnpm-store
+
+electron/database/*.db

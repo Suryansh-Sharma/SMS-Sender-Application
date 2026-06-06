@@ -146,21 +146,19 @@ Administrator users should:
 
 ### Step 3: Prepare Recipient List
 
-Create an Excel file containing a column named:
+Create an Excel file with a column for the phone number and an optional `Name` column.
 
-```text
-mobile
-```
+The phone number column can be named **`Mobile`**, **`Phone`**, or **`Contact`** (case-insensitive).
 
-The column should contain valid 10-digit mobile numbers.
+The column should contain valid 10-digit Indian mobile numbers.
 
 Example:
 
-| mobile     |
-| ---------- |
-| 9876543210 |
-| 9123456789 |
-| 9988776655 |
+| Mobile     | Name    |
+| ---------- | ------- |
+| 9876543210 | Rahul   |
+| 9123456789 | Priya   |
+| 9988776655 | Anjali  |
 
 ### Step 4: Send SMS Campaign
 

@@ -104,6 +104,7 @@ const HOW_TO_USE = [
             background: "#f1f5f9",
             padding: "2px 6px",
             borderRadius: 4,
+            color: "black",
           }}
         >
           mobile
@@ -389,7 +390,7 @@ export default function AboutPage() {
                 Suryansh Sharma
               </div>
               <div style={{ fontSize: 13, color: "#64748b", marginBottom: 10 }}>
-                Full-Stack Developer
+                Software Engineer
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <a

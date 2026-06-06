@@ -38,6 +38,11 @@ CREATE TABLE IF NOT EXISTS message_history (
 );`,
 ).run();
 
+// Safe migration: add delivered_count if the column does not yet exist.
+try {
+  db.prepare(`ALTER TABLE message_history ADD COLUMN delivered_count INTEGER DEFAULT 0`).run();
+} catch { /* column already present */ }
+
 db.prepare(
   `
 CREATE TABLE IF NOT EXISTS app_setting(
