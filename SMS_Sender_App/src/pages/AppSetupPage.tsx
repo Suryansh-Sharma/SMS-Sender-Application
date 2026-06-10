@@ -240,8 +240,14 @@ function AppSetupPage() {
                   />
                 </Form.Item>
               </Col>
-              <Col xs={24} sm={12}>
-                <Form.Item name="dailySmsLimit" label="Daily SMS Limit">
+              <Col>
+                <Form.Item
+                  name="dailySmsLimit"
+                  label="Daily SMS Limit"
+                  rules={[
+                    { required: true, message: "Daily limit is required." },
+                  ]}
+                >
                   <InputNumber
                     min={1}
                     placeholder="e.g. 500"
@@ -254,7 +260,20 @@ function AppSetupPage() {
 
             <Row gutter={16}>
               <Col span={24}>
-                <Form.Item name="smsUrl" label="SMS Gateway URL">
+                <Form.Item
+                  name="smsUrl"
+                  label="SMS Gateway URL"
+                  rules={[
+                    {
+                      required: true,
+                      message: "SMS Gateway URL is required.",
+                    },
+                    {
+                      type: "url",
+                      message: "Enter a valid URL.",
+                    },
+                  ]}
+                >
                   <Input
                     placeholder="e.g. https://api.smsprovider.com/send"
                     size="large"
