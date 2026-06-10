@@ -476,7 +476,14 @@ export default function AboutPage() {
           paddingBottom: 16,
         }}
       >
-        <GithubOutlined style={{ marginRight: 6 }} />
+        <a
+          href="https://github.com/Suryansh-Sharma/SMS-Sender-Application"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <GithubOutlined style={{ marginRight: 6 }} />
+          GitHub
+        </a>
         SMS Sender Pulse — Built with React, Electron &amp; Tailwind CSS
         &nbsp;·&nbsp; © 2026 Suryansh Sharma
       </div>
