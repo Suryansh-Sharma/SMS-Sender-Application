@@ -4,7 +4,16 @@ import {
   SendOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
-import { Button, Input, Modal, Progress, Select, Tag, Upload, message } from "antd";
+import {
+  Button,
+  Input,
+  Modal,
+  Progress,
+  Select,
+  Tag,
+  Upload,
+  message,
+} from "antd";
 import { useEffect, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import { LoadingComponent } from "../component/LoadingComponent";
@@ -37,7 +46,12 @@ function SendMessage() {
   const [category, setCategory] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setLoading] = useState(false);
-  const [progress, setProgress] = useState<{ sent: number; total: number; successCount: number; failedCount: number } | null>(null);
+  const [progress, setProgress] = useState<{
+    sent: number;
+    total: number;
+    successCount: number;
+    failedCount: number;
+  } | null>(null);
   const sendingRef = useRef(false);
 
   const addRecipients = (newList: Recipient[]) => {
@@ -108,7 +122,9 @@ function SendMessage() {
     try {
       availableCredit = await SmsSpiApiService.getCurrentSmsCredit();
     } catch {
-      message.warning("Could not fetch SMS credit. Proceeding without credit check.");
+      message.warning(
+        "Could not fetch SMS credit. Proceeding without credit check.",
+      );
     }
 
     if (availableCredit !== undefined && availableCredit < totalSms) {
@@ -116,9 +132,15 @@ function SendMessage() {
         title: "Insufficient SMS Credits",
         content: (
           <div className="space-y-1 mt-2">
-            <p>Required: <b className="text-red-500">{totalSms} credits</b></p>
-            <p>Available: <b>{availableCredit} credits</b></p>
-            <p className="text-slate-500 text-xs mt-2">Please recharge your account before sending.</p>
+            <p>
+              Required: <b className="text-red-500">{totalSms} credits</b>
+            </p>
+            <p>
+              Available: <b>{availableCredit} credits</b>
+            </p>
+            <p className="text-slate-500 text-xs mt-2">
+              Please recharge your account before sending.
+            </p>
           </div>
         ),
       });
@@ -129,10 +151,20 @@ function SendMessage() {
       title: "Send Message?",
       content: (
         <div className="space-y-1 mt-1">
-          <p>Sending to <b>{recipients.length}</b> recipient{recipients.length !== 1 ? "s" : ""}</p>
-          <p>Credits required: <b className="text-orange-500">{totalSms}</b></p>
+          <p>
+            Sending to <b>{recipients.length}</b> recipient
+            {recipients.length !== 1 ? "s" : ""}
+          </p>
+          <p>
+            Credits required: <b className="text-orange-500">{totalSms}</b>
+          </p>
           {availableCredit !== undefined && (
-            <p>Credits after send: <b className="text-green-600">{(availableCredit - totalSms).toFixed(2)}</b></p>
+            <p>
+              Credits after send:{" "}
+              <b className="text-green-600">
+                {(availableCredit - totalSms).toFixed(2)}
+              </b>
+            </p>
           )}
         </div>
       ),
@@ -141,7 +173,12 @@ function SendMessage() {
       okType: "primary",
       onOk: async () => {
         sendingRef.current = true;
-        setProgress({ sent: 0, total: recipients.length, successCount: 0, failedCount: 0 });
+        setProgress({
+          sent: 0,
+          total: recipients.length,
+          successCount: 0,
+          failedCount: 0,
+        });
         try {
           const result = await SmsSpiApiService.sendSms({
             recipients: recipients.map((r) => r.contact),
@@ -153,20 +190,35 @@ function SendMessage() {
           sendingRef.current = false;
           const resultContent = (
             <div className="space-y-1 mt-2">
-              <p>Total recipients: <b>{result.totalRecipients}</b></p>
-              <p>Submitted to network: <b className="text-green-600">{result.successCount}</b></p>
+              <p>
+                Total recipients: <b>{result.totalRecipients}</b>
+              </p>
+              <p>
+                Submitted to network:{" "}
+                <b className="text-green-600">{result.successCount}</b>
+              </p>
               {result.failedCount > 0 && (
-                <p>Failed: <b className="text-red-500">{result.failedCount}</b></p>
+                <p>
+                  Failed: <b className="text-red-500">{result.failedCount}</b>
+                </p>
               )}
               {result.groupId && (
-                <p className="text-xs text-slate-400 mt-2">Group ID: {result.groupId}</p>
+                <p className="text-xs text-slate-400 mt-2">
+                  Group ID: {result.groupId}
+                </p>
               )}
             </div>
           );
           if (result.campaignStatus === "PARTIAL") {
-            Modal.warning({ title: "Campaign Partially Sent", content: resultContent });
+            Modal.warning({
+              title: "Campaign Partially Sent",
+              content: resultContent,
+            });
           } else {
-            Modal.success({ title: "Campaign Submitted", content: resultContent });
+            Modal.success({
+              title: "Campaign Submitted",
+              content: resultContent,
+            });
           }
           setRecipients([]);
           setMessageText("");
@@ -182,10 +234,18 @@ function SendMessage() {
 
   const charCount = messageText.length;
   // GSM-7 basic charset: 160 chars/segment (153 multipart). Unicode: 70 chars/segment (67 multipart).
-  const isGsm7 = /^[\x20-\x7E\n\r£¥àèéùìòÇØøÅåΔΦΓΛΩΠΨΣΘΞÆæßÉ¤¡ÄÖÑÜ§¿äöñüà]*$/.test(messageText);
+  const isGsm7 =
+    /^[\x20-\x7E\n\r£¥àèéùìòÇØøÅåΔΦΓΛΩΠΨΣΘΞÆæßÉ¤¡ÄÖÑÜ§¿äöñüà]*$/.test(
+      messageText,
+    );
   const singleLimit = isGsm7 ? 160 : 70;
   const multiLimit = isGsm7 ? 153 : 67;
-  const smsCount = charCount === 0 ? 1 : charCount <= singleLimit ? 1 : Math.ceil(charCount / multiLimit);
+  const smsCount =
+    charCount === 0
+      ? 1
+      : charCount <= singleLimit
+        ? 1
+        : Math.ceil(charCount / multiLimit);
   const totalSms = recipients.length * smsCount;
 
   if (isLoading) return <LoadingComponent />;
@@ -198,7 +258,7 @@ function SendMessage() {
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
               <ThunderboltOutlined />
             </div>
-            <h1 className="text-xl font-bold tracking-tight">New Campaign</h1>
+            <h1 className="text-xl font-bold text-slate-900">New Campaign</h1>
           </div>
           <Button
             type="text"
@@ -222,7 +282,9 @@ function SendMessage() {
                 "01"
               )}
             </span>
-            <h2 className="text-xl font-bold">Who are we messaging?</h2>
+            <h2 className="text-xl font-bold text-slate-700">
+              Who are we messaging?
+            </h2>
           </div>
 
           <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100">
@@ -281,14 +343,19 @@ function SendMessage() {
                 "02"
               )}
             </span>
-            <h2 className="text-xl font-bold">Pick a Template</h2>
+            <h2 className="text-xl font-bold text-slate-700">
+              Pick a Template
+            </h2>
           </div>
 
           <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
             {templates.map((template) => (
               <div
                 key={template.id}
-                onClick={() => { setMessageText(template.message); setCategory(template.category); }}
+                onClick={() => {
+                  setMessageText(template.message);
+                  setCategory(template.category);
+                }}
                 className="min-w-50 max-w-50 cursor-pointer rounded-2xl border border-slate-100 bg-slate-50 p-4 hover:bg-blue-50 hover:border-blue-200 transition-all active:scale-95"
               >
                 <h3 className="font-bold text-sm text-slate-800 mb-1 truncate">
@@ -308,7 +375,9 @@ function SendMessage() {
             <span className="flex-none w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-sm">
               03
             </span>
-            <h2 className="text-xl font-bold">Write your message</h2>
+            <h2 className="text-xl font-bold text-slate-700">
+              Write your message
+            </h2>
           </div>
 
           <div className="mb-4">
@@ -384,7 +453,9 @@ function SendMessage() {
       >
         {progress && (
           <div className="py-4 px-2 text-center">
-            <div className="text-lg font-bold text-slate-800 mb-1">Sending Campaign…</div>
+            <div className="text-lg font-bold text-slate-800 mb-1">
+              Sending Campaign…
+            </div>
             <p className="text-sm text-slate-500 mb-6">
               Please keep the app open. Do not close.
             </p>
@@ -395,15 +466,21 @@ function SendMessage() {
             />
             <div className="flex justify-around mt-5 text-sm">
               <div>
-                <div className="font-bold text-slate-700">{progress.sent} / {progress.total}</div>
+                <div className="font-bold text-slate-700">
+                  {progress.sent} / {progress.total}
+                </div>
                 <div className="text-xs text-slate-400">Processed</div>
               </div>
               <div>
-                <div className="font-bold text-green-600">{progress.successCount}</div>
+                <div className="font-bold text-green-600">
+                  {progress.successCount}
+                </div>
                 <div className="text-xs text-slate-400">Sent</div>
               </div>
               <div>
-                <div className="font-bold text-red-500">{progress.failedCount}</div>
+                <div className="font-bold text-red-500">
+                  {progress.failedCount}
+                </div>
                 <div className="text-xs text-slate-400">Failed</div>
               </div>
             </div>
