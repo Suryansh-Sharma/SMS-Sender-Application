@@ -109,9 +109,10 @@ export const smsHandler = () => {
       let failedCount = 0;
       let groupId = null;
 
-      // Spring Edge accepts comma-separated numbers in a single POST.
-      // Chunk at 300 to stay within safe POST body limits.
-      const CHUNK_SIZE = 300;
+      // SpringEdge hard limit: max 25 recipients per comma-separated request.
+      // Inter-chunk delay keeps us under their 150 req/min rate limit.
+      const CHUNK_SIZE = 25;
+      const INTER_CHUNK_DELAY_MS = 450;
 
       for (let i = 0; i < total; i += CHUNK_SIZE) {
         const chunk = recipients.slice(i, i + CHUNK_SIZE);
@@ -159,6 +160,11 @@ export const smsHandler = () => {
           sent: Math.min(i + CHUNK_SIZE, total),
           total, successCount, failedCount,
         });
+
+        // Respect SpringEdge 150 req/min rate limit between chunks.
+        if (i + CHUNK_SIZE < total) {
+          await new Promise((res) => setTimeout(res, INTER_CHUNK_DELAY_MS));
+        }
       }
 
       const campaignStatus =
@@ -219,8 +225,10 @@ export const smsHandler = () => {
         return { success: false, message: "Unexpected delivery report response." };
       }
 
+      // SpringEdge confirmed status value is "DELIVRD" (not "DELIVERED").
+      // Response shape: [{ id, Recipient, status, UpdatedTime }]
       const deliveredCount = records.filter(
-        (r) => String(r.status ?? "").toUpperCase() === "DELIVERED"
+        (r) => r.status === "DELIVRD"
       ).length;
 
       if (campaignId) {
