@@ -8,7 +8,7 @@ import { Button, Input, Modal, Progress, Select, Tag, Upload, message } from "an
 import { useEffect, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import { LoadingComponent } from "../component/LoadingComponent";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { SmsSpiApiService } from "../service/SmsApiService";
 import templatesData from "../data/Sms_Template.json";
 

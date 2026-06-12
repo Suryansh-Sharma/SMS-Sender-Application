@@ -1,29 +1,13 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AppSettingApiService } from "../service/AppSettingApiService";
-import { AppSettingResponse } from "../types/appSetting";
+import type { AppSettingResponse } from "../types/appSetting";
+import { AuthContext, type User } from "./authContext";
 
-type User = {
-  id: number;
-  name: string;
-  role: string;
-  change_password: number;
-  is_active: number;
-};
-
-type AuthContextType = {
-  user: User | null;
-  login: (user: User) => void;
-  logout: () => void;
-  loading: boolean;
-  appSetting: AppSettingResponse | null;
-};
-
-const AuthContext = createContext<AuthContextType | null>(null);
-
-export const AuthProvider = ({ children }: any) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [appSetting, setAppSetting] = useState<AppSettingResponse | null>(null);
   const [loading, setLoading] = useState(true);
+
   const checkIsAppSettingPresent = async () => {
     try {
       const res = await AppSettingApiService.getApplicationSetting();
@@ -32,11 +16,7 @@ export const AuthProvider = ({ children }: any) => {
         return;
       }
       const data = res.data;
-      const isSetupComplete = !!(
-        data.smsApiKey &&
-        data.senderId &&
-        data.orgName
-      );
+      const isSetupComplete = !!(data.smsApiKey && data.senderId && data.orgName);
       if (!isSetupComplete) {
         setAppSetting(null);
         return;
@@ -47,6 +27,7 @@ export const AuthProvider = ({ children }: any) => {
       setAppSetting(null);
     }
   };
+
   useEffect(() => {
     const initializeApp = async () => {
       try {
@@ -79,10 +60,4 @@ export const AuthProvider = ({ children }: any) => {
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
-  return ctx;
 };

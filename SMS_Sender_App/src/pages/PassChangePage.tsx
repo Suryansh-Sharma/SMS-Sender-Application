@@ -2,9 +2,9 @@ import { LockOutlined } from "@ant-design/icons";
 import { Alert, Button, Card, Form, Input, message, Typography } from "antd";
 import { useState } from "react";
 import { LoadingComponent } from "../component/LoadingComponent";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { UserApiService } from "../service/UserApiService";
-import { UpdatePasswordPayload } from "../types/auth";
+import type { UpdatePasswordPayload } from "../types/auth";
 
 const { Title, Text } = Typography;
 

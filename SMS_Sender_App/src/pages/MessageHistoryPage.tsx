@@ -13,8 +13,8 @@ import {
 import { useEffect, useState } from "react";
 import { LoadingComponent } from "../component/LoadingComponent";
 import { messageHistoryApi } from "../service/MessageApiService";
-import { PaginationResponse } from "../types/common";
-import { MessageHistory } from "../types/messageHistory";
+import type { PaginationResponse } from "../types/common";
+import type { MessageHistory } from "../types/messageHistory";
 
 const { Title, Text } = Typography;
 
@@ -27,10 +27,7 @@ const MessageHistoryPage = () => {
   const [page, setPage] = useState<number>(1);
 
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
-
-  useEffect(() => {
-    fetchData();
-  }, [page, sortOrder]);
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -47,6 +44,36 @@ const MessageHistoryPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, sortOrder]);
+
+  const handleRefreshDelivery = async (record: MessageHistory) => {
+    if (!record.springedge_group_id) return;
+    setRefreshingId(record.campaign_id);
+    try {
+      const res = await window.api.getDeliveryReport({
+        groupId: record.springedge_group_id,
+        campaignId: record.campaign_id,
+      });
+      if (res.success) {
+        message.success(`Delivered: ${res.data?.deliveredCount ?? 0}`);
+        fetchData();
+      } else {
+        message.error(res.message ?? "Failed to fetch delivery report.");
+      }
+    } finally {
+      setRefreshingId(null);
+    }
+  };
+
+  const statusColor: Record<string, string> = {
+    SENT: "green",
+    PARTIAL: "orange",
+    FAILED: "red",
   };
 
   const columns = [
@@ -112,7 +139,10 @@ const MessageHistoryPage = () => {
       title: "Sent On",
       dataIndex: "sent_on",
       key: "sentOn",
-      render: (value: string) => new Date(value.replace(" ", "T") + "Z").toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+      render: (value: string) =>
+        new Date(value.replace(" ", "T") + "Z").toLocaleString("en-IN", {
+          timeZone: "Asia/Kolkata",
+        }),
     },
   ];
 

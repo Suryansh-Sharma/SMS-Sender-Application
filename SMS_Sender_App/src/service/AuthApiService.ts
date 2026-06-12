@@ -1,4 +1,4 @@
-import { ResetPasswordPayload, ResetPasswordResponse } from "../types/auth";
+import type { ResetPasswordPayload, ResetPasswordResponse } from "../types/auth";
 
 export const AuthApiService = {
   login: async (username: string, password: string) => {
