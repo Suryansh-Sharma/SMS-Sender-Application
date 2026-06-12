@@ -1,9 +1,9 @@
 export type User = {
   id: number;
   name: string;
-  role: "ADMIN" | "USER";
-  mustChangePassword: boolean;
-  isActive: boolean;
+  role: string;
+  change_password: number;
+  is_active: number;
 };
 
 export type LoginResponse = {

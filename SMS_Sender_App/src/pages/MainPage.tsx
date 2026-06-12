@@ -8,11 +8,11 @@ import { useNavigate } from "react-router-dom";
 import ActionCard from "../component/ActionCard";
 import CardComponent from "../component/CardComponent";
 import { LoadingComponent } from "../component/LoadingComponent";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { statsApiService } from "../service/StatsApiService";
 import { SmsSpiApiService } from "../service/SmsApiService";
-import { DashboardStatsResponse } from "../types/stats";
-import { MessageHistory } from "../types/messageHistory";
+import type { DashboardStatsResponse } from "../types/stats";
+import type { MessageHistory } from "../types/messageHistory";
 import { Card, Table, Tag } from "antd";
 import ReportsComponent from "../component/ReportsComponent";
 

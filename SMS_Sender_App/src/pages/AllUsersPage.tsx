@@ -6,11 +6,11 @@ import {
   StopOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
+import type { MenuProps } from "antd";
 import {
   Avatar,
   Button,
   Dropdown,
-  MenuProps,
   message,
   Modal,
   Space,
@@ -22,20 +22,12 @@ import { useEffect, useState } from "react";
 import AddUserModal from "../component/AddUserModal";
 import { LoadingComponent } from "../component/LoadingComponent";
 import { UserApiService } from "../service/UserApiService";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { AuthApiService } from "../service/AuthApiService";
-import { ResetPasswordPayload } from "../types/auth";
+import type { ResetPasswordPayload, User } from "../types/auth";
 import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
-
-export type User = {
-  id: number;
-  name: string;
-  role: "ADMIN" | "USER";
-  mustChangePassword: boolean;
-  isActive: boolean;
-};
 
 const AllUsersPage = () => {
   const [loading, setLoading] = useState<boolean>(true);

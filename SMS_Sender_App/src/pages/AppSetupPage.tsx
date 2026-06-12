@@ -17,9 +17,9 @@ import {
   message,
 } from "antd";
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { AppSettingApiService } from "../service/AppSettingApiService";
-import { AppSettingPayload } from "../types/appSetting";
+import type { AppSettingPayload } from "../types/appSetting";
 
 function AppSetupPage() {
   const { user, logout } = useAuth();

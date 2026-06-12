@@ -16,8 +16,8 @@ import {
 import { useEffect, useState } from "react";
 import { LoadingComponent } from "../component/LoadingComponent";
 import { messageHistoryApi } from "../service/MessageApiService";
-import { PaginationResponse } from "../types/common";
-import { MessageHistory } from "../types/messageHistory";
+import type { PaginationResponse } from "../types/common";
+import type { MessageHistory } from "../types/messageHistory";
 
 const { Title, Text } = Typography;
 
@@ -31,10 +31,6 @@ const MessageHistoryPage = () => {
 
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchData();
-  }, [page, sortOrder]);
 
   const fetchData = async () => {
     try {
@@ -52,6 +48,11 @@ const MessageHistoryPage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, sortOrder]);
 
   const handleRefreshDelivery = async (record: MessageHistory) => {
     if (!record.springedge_group_id) return;
@@ -141,43 +142,10 @@ const MessageHistoryPage = () => {
       title: "Sent On",
       dataIndex: "sent_on",
       key: "sentOn",
-      render: (value: string) => new Date(value.replace(" ", "T") + "Z").toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
-    },
-
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (value: string) => (
-        <Tag color={statusColor[value] ?? "default"} style={{ borderRadius: 999 }}>
-          {value}
-        </Tag>
-      ),
-    },
-
-    {
-      title: "Delivered",
-      dataIndex: "delivered_count",
-      key: "deliveredCount",
-      render: (value: number) => (
-        <Text>{value > 0 ? value : "—"}</Text>
-      ),
-    },
-
-    {
-      title: "",
-      key: "actions",
-      render: (_: unknown, record: MessageHistory) =>
-        record.springedge_group_id ? (
-          <Tooltip title="Refresh delivery status from SpringEdge">
-            <Button
-              size="small"
-              icon={<SyncOutlined spin={refreshingId === record.campaign_id} />}
-              loading={refreshingId === record.campaign_id}
-              onClick={() => handleRefreshDelivery(record)}
-            />
-          </Tooltip>
-        ) : null,
+      render: (value: string) =>
+        new Date(value.replace(" ", "T") + "Z").toLocaleString("en-IN", {
+          timeZone: "Asia/Kolkata",
+        }),
     },
   ];
 

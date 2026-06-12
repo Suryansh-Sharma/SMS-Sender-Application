@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { LoadingComponent } from "./component/LoadingComponent";
-import { useAuth } from "./context/AuthContext";
+import { useAuth } from "./context/useAuth";
 import AboutPage from "./pages/AboutPage";
 import AllUsersPage from "./pages/AllUsersPage";
 import AppSetupPage from "./pages/AppSetupPage";

@@ -35,10 +35,10 @@ const AddUserModal = ({ open, onClose, onSuccess }: Props) => {
       onSuccess();
       form.resetFields();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       Modal.error({
         title: "Failed",
-        content: err.message,
+        content: err instanceof Error ? err.message : String(err),
       });
     } finally {
       setLoading(false);

@@ -7,7 +7,7 @@ import {
 import { Button, Card, Form, Input, message, Typography } from "antd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { AuthApiService } from "../service/AuthApiService";
 
 const { Title, Text } = Typography;
@@ -21,11 +21,11 @@ export const LoginPage = () => {
     setLoading(true);
     try {
       const res = await AuthApiService.login(values.username, values.password);
-      login(res.user);
+      if (res.user) login(res.user);
       navigate("/");
       //   console.log(res);
-    } catch (e: any) {
-      message.error(e.message);
+    } catch (e: unknown) {
+      message.error(e instanceof Error ? e.message : "Login failed");
     }
     setLoading(false);
   };
