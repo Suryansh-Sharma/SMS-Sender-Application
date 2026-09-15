@@ -26,6 +26,7 @@ type Template = {
   category: string;
   title: string;
   message: string;
+  variables?: string[];
 };
 type Recipient = {
   id?: number;
@@ -44,6 +45,9 @@ function SendMessage() {
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [messageText, setMessageText] = useState("");
   const [category, setCategory] = useState("");
+  const [templateId, setTemplateId] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [templateVars, setTemplateVars] = useState<Record<string, string>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setLoading] = useState(false);
   const [progress, setProgress] = useState<{
@@ -111,6 +115,16 @@ function SendMessage() {
     window.api.onSmsProgress((data) => setProgress(data));
     return () => window.api.offSmsProgress();
   }, []);
+
+  let displayMessage = messageText;
+  if (selectedTemplate) {
+    displayMessage = selectedTemplate.message;
+    if (selectedTemplate.variables) {
+      selectedTemplate.variables.forEach(v => {
+        displayMessage = displayMessage.replace(`{${v}}`, templateVars[v] || `{${v}}`);
+      });
+    }
+  }
 
   const handleSendMsgBtn = async () => {
     if (!category) {
@@ -182,9 +196,10 @@ function SendMessage() {
         try {
           const result = await SmsSpiApiService.sendSms({
             recipients: recipients.map((r) => r.contact),
-            message: messageText,
+            message: displayMessage,
             category,
             sentBy: user?.name ?? "Unknown",
+            templateId,
           });
           setProgress(null);
           sendingRef.current = false;
@@ -223,6 +238,8 @@ function SendMessage() {
           setRecipients([]);
           setMessageText("");
           setCategory("");
+          setSelectedTemplate(null);
+          setTemplateVars({});
         } catch (err) {
           setProgress(null);
           sendingRef.current = false;
@@ -232,11 +249,11 @@ function SendMessage() {
     });
   };
 
-  const charCount = messageText.length;
+  const charCount = displayMessage.length;
   // GSM-7 basic charset: 160 chars/segment (153 multipart). Unicode: 70 chars/segment (67 multipart).
   const isGsm7 =
     /^[\x20-\x7E\n\r£¥àèéùìòÇØøÅåΔΦΓΛΩΠΨΣΘΞÆæßÉ¤¡ÄÖÑÜ§¿äöñüà]*$/.test(
-      messageText,
+      displayMessage,
     );
   const singleLimit = isGsm7 ? 160 : 70;
   const multiLimit = isGsm7 ? 153 : 67;
@@ -353,10 +370,21 @@ function SendMessage() {
               <div
                 key={template.id}
                 onClick={() => {
-                  setMessageText(template.message);
+                  setSelectedTemplate(template);
                   setCategory(template.category);
+                  setTemplateId(String(template.id));
+                  const vars: Record<string, string> = {};
+                  if (template.variables) {
+                    template.variables.forEach(v => vars[v] = "");
+                  }
+                  setTemplateVars(vars);
+                  setMessageText(template.message);
                 }}
-                className="min-w-50 max-w-50 cursor-pointer rounded-2xl border border-slate-100 bg-slate-50 p-4 hover:bg-blue-50 hover:border-blue-200 transition-all active:scale-95"
+                className={`min-w-50 max-w-50 cursor-pointer rounded-2xl border p-4 transition-all active:scale-95 ${
+                  selectedTemplate?.id === template.id
+                    ? "border-blue-500 bg-blue-50 shadow-md"
+                    : "border-slate-100 bg-slate-50 hover:bg-blue-50 hover:border-blue-200"
+                }`}
               >
                 <h3 className="font-bold text-sm text-slate-800 mb-1 truncate">
                   {template.title}
@@ -380,24 +408,58 @@ function SendMessage() {
             </h2>
           </div>
 
-          <div className="mb-4">
+          <div className="mb-4 flex items-center gap-4">
             <Select
               className="w-full"
               placeholder="Select a category..."
               value={category || undefined}
-              onChange={(val) => setCategory(val)}
+              onChange={(val) => {
+                setCategory(val);
+                if (!val) {
+                   setSelectedTemplate(null);
+                   setTemplateId("");
+                   setMessageText("");
+                }
+              }}
               options={CATEGORIES.map((c) => ({ label: c, value: c }))}
               allowClear
             />
+            {selectedTemplate && (
+               <Button onClick={() => { setSelectedTemplate(null); setTemplateId(""); setMessageText(""); }} danger>Clear</Button>
+            )}
           </div>
+
+          {selectedTemplate && selectedTemplate.variables && selectedTemplate.variables.length > 0 && (
+            <div className="mb-4 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+              <h3 className="text-sm font-bold text-blue-800 mb-3">Fill Template Variables</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {selectedTemplate.variables.map(v => (
+                  <div key={v}>
+                    <label className="block text-xs font-semibold text-blue-700 mb-1">{v}</label>
+                    <Input
+                      value={templateVars[v] || ""}
+                      onChange={(e) => setTemplateVars(prev => ({ ...prev, [v]: e.target.value }))}
+                      placeholder={`Enter ${v}`}
+                      className="rounded-xl"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="relative">
             <TextArea
               rows={8}
-              value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
+              value={displayMessage}
+              onChange={(e) => {
+                 if (!selectedTemplate) setMessageText(e.target.value);
+              }}
+              readOnly={!!selectedTemplate}
               placeholder="What's the word?..."
-              className="rounded-3xl border-slate-100 bg-slate-50 p-6 text-lg focus:bg-white focus:shadow-xl transition-all"
+              className={`rounded-3xl border-slate-100 p-6 text-lg transition-all ${
+                selectedTemplate ? "bg-slate-100 text-slate-500 cursor-not-allowed border" : "bg-slate-50 focus:bg-white focus:shadow-xl border"
+              }`}
             />
             <div className="absolute bottom-4 right-6 flex gap-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">
               <span>{charCount} Chars</span>
@@ -434,7 +496,7 @@ function SendMessage() {
               type="primary"
               size="large"
               icon={<SendOutlined />}
-              disabled={!recipients.length || !messageText || !category}
+              disabled={!recipients.length || !displayMessage || !category}
               className="h-14 px-8 rounded-2xl bg-blue-600 hover:bg-blue-500 border-none font-bold text-base shadow-lg shadow-blue-600/20"
             >
               Send Now

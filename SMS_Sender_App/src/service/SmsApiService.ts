@@ -12,6 +12,7 @@ export const SmsSpiApiService = {
     message: string;
     category: string;
     sentBy: string;
+    templateId?: string;
   }) => {
     const response = await window.api.sendSms(payload);
     if (!response.success) {
