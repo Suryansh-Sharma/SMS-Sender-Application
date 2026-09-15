@@ -70,3 +70,4 @@ electron-debug.log
 .pnpm-store
 
 electron/database/*.db
+/src/data/Sms_Template.json

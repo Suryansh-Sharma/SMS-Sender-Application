@@ -103,6 +103,7 @@ declare global {
         message: string;
         category: string;
         sentBy: string;
+        templateId?: string;
       }) => Promise<{
         success: boolean;
         message?: string;

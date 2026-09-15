@@ -86,7 +86,7 @@ export const smsHandler = () => {
     }
   });
 
-  ipcMain.handle("sms:sendMessage", async (event, { recipients, message, category, sentBy }) => {
+  ipcMain.handle("sms:sendMessage", async (event, { recipients, message, category, sentBy, templateId }) => {
     try {
       const setting = settingService.getSetting();
       if (!setting.smsApiKey || !setting.smsUrl || !setting.senderId) {
@@ -118,14 +118,20 @@ export const smsHandler = () => {
         const chunk = recipients.slice(i, i + CHUNK_SIZE);
 
         try {
+          const payload = {
+            apikey: setting.smsApiKey,
+            sender: setting.senderId,
+            to: chunk.join(","),
+            message,
+            format: "json",
+          };
+          if (templateId) {
+            payload.dlttid = templateId; // Common SpringEdge parameter for DLT Template ID
+            payload.dlt_template_id = templateId; 
+          }
+
           const body = await withRetry(() =>
-            httpPost(`${setting.smsUrl}/api/web/send/`, {
-              apikey: setting.smsApiKey,
-              sender: setting.senderId,
-              to: chunk.join(","),
-              message,
-              format: "json",
-            })
+            httpPost(`${setting.smsUrl}/api/web/send/`, payload)
           );
 
           console.log("[SMS] API raw response:", body);
